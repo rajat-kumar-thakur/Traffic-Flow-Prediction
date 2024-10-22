@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>Traffic Prediction</title>
+   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+   <style>
+       .traffic-low {
+           background-color: #90EE90 !important; /* Light green */
+       }
+       .traffic-normal {
+           background-color: #228B22 !important; /* Dark green */
+           color: white !important;
+       }
+       .traffic-high {
+           background-color: #FFB6C1 !important; /* Light red */
+       }
+       .traffic-heavy {
+           background-color: #8B0000 !important; /* Dark red */
+           color: white !important;
+       }
+   </style>
+</head>
+<body class="container mt-5">
+   <h2>Traffic Prediction System</h2>
+   <form id="predictionForm" class="mt-4">
+       <div class="mb-3">
+           <label class="form-label">Day of the week:</label>
+           <select class="form-select" id="day" required>
+               <option value="Monday">Monday</option>
+               <option value="Tuesday">Tuesday</option>
+               <option value="Wednesday">Wednesday</option>
+               <option value="Thursday">Thursday</option>
+               <option value="Friday">Friday</option>
+               <option value="Saturday">Saturday</option>
+               <option value="Sunday">Sunday</option>
+           </select>
+       </div>
+
+       <div class="mb-3">
+           <label class="form-label">Time (HH:MM:SS):</label>
+           <input type="time" class="form-control" id="time" step="1" required>
+       </div>
+
+       <div class="mb-3">
+           <label class="form-label">Number of Cars:</label>
+           <input type="number" class="form-control" id="car_count" required min="0">
+       </div>
+
+       <div class="mb-3">
+           <label class="form-label">Number of Bikes:</label>
+           <input type="number" class="form-control" id="bike_count" required min="0">
+       </div>
+
+       <div class="mb-3">
+           <label class="form-label">Number of Buses:</label>
+           <input type="number" class="form-control" id="bus_count" required min="0">
+       </div>
+
+       <div class="mb-3">
+           <label class="form-label">Number of Trucks:</label>
+           <input type="number" class="form-control" id="truck_count" required min="0">
+       </div>
+
+       <button type="submit" class="btn btn-primary">Predict Traffic</button>
+   </form>
+
+   <div id="result" class="mt-4"></div>
+
+   <script>
+   document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+       e.preventDefault();
+
+       const timeInput = document.getElementById('time').value;
+       const [hours, minutes] = timeInput.split(':');
+       const formattedTime = `${hours}:${minutes}:00`;
+
+       const formData = {
+           day: document.getElementById('day').value,
+           time: formattedTime,
+           car_count: document.getElementById('car_count').value,
+           bike_count: document.getElementById('bike_count').value,
+           bus_count: document.getElementById('bus_count').value,
+           truck_count: document.getElementById('truck_count').value
+       };
+
+       try {
+           const response = await fetch('/predict', {
+               method: 'POST',
+               headers: {
+                   'Content-Type': 'application/json',
+               },
+               body: JSON.stringify(formData)
+           });
+
+           const data = await response.json();
+
+           if (response.ok) {
+               const trafficClass = `traffic-${data.prediction.toLowerCase()}`;
+               document.getElementById('result').innerHTML = `
+                   <div class="alert ${trafficClass}">
+                       Predicted traffic situation: ${data.prediction.toUpperCase()}
+                   </div>`;
+           } else {
+               document.getElementById('result').innerHTML = `
+                   <div class="alert alert-danger">
+                       Error: ${data.error}
+                   </div>`;
+           }
+       } catch (error) {
+           document.getElementById('result').innerHTML = `
+               <div class="alert alert-danger">
+                   Error: ${error.message}
+               </div>`;
+       }
+   });
+</script>
+</body>
+</html>
